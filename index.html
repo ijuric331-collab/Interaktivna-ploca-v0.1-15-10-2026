@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FM Taktika – A4 Landscape</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+  html, body {
+    background:#4a4a4a;
+    font-family: Arial, Helvetica, sans-serif;
+    color:#000;
+    padding:20px;
+    display:flex; flex-direction:column; align-items:center;
+    min-height:100vh;
+  }
+
+  /* ===== TOOLBAR ===== */
+  .toolbar {
+    display:flex; gap:8px; justify-content:center; flex-wrap:wrap;
+    margin-bottom:16px;
+  }
+  .toolbar button {
+    font-family:inherit; font-size:12px; font-weight:bold;
+    padding:10px 18px;
+    border:1.5px solid #222; background:#fff; color:#000;
+    cursor:pointer; letter-spacing:.5px; border-radius:3px;
+    transition:all .15s;
+  }
+  .toolbar button:hover { background:#222; color:#fff; }
+  .toolbar button:active { transform:translateY(1px); }
+
+  /* ===== A4 LANDSCAPE ===== */
+  .page {
+    width:297mm;
+    height:210mm;
+    background:#fff;
+    padding:8mm 10mm 6mm 10mm;
+    box-shadow:0 6px 30px rgba(0,0,0,.5);
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+
+  /* ===== TOP ROW ===== */
+  .top-row {
+    display:flex; align-items:center; gap:14px;
+    margin-bottom:3mm;
+    font-size:15px; font-weight:bold;
+  }
+  .top-row .title { font-size:15px; }
+  .top-row input {
+    border:none; border-bottom:1.5px solid #000;
+    font-family:inherit; font-size:15px; font-weight:bold;
+    outline:none; background:transparent;
+    width:130px; padding:1px 4px; text-align:center;
+  }
+
+  /* ===== MAIN GRID ===== */
+  .main {
+    display:grid;
+    grid-template-columns: 108mm 1fr;
+    gap:5mm;
+    flex:1;
+    min-height:0;
+  }
+
+  /* ===== TEREN ===== */
+  .pitch-area {
+    display:flex;
+    flex-direction:column;
+    height:100%;
+    min-height:0;
+  }
+  .pitch-wrap {
+    position:relative;
+    width:100%;
+    flex:1;
+    min-height:0;
+    background:#fff;
+    border:2px solid #000;
+    overflow:hidden;
+  }
+
+  /* Srednja linija */
+  .halfway {
+    position:absolute;
+    left:0; right:0; top:50%;
+    height:1.5px; background:#000;
+    transform:translateY(-0.75px);
+  }
+  /* Središnji krug */
+  .center-circle {
+    position:absolute;
+    left:50%; top:50%;
+    width:32mm; height:32mm;
+    border:1.5px solid #000;
+    border-radius:50%;
+    transform:translate(-50%,-50%);
+  }
+  .center-dot {
+    position:absolute;
+    left:50%; top:50%;
+    width:2.5mm; height:2.5mm;
+    background:#000; border-radius:50%;
+    transform:translate(-50%,-50%);
+    z-index:3;
+  }
+
+  /* Kazneni prostor */
+  .penalty-box {
+    position:absolute;
+    left:50%;
+    width:56mm; height:20mm;
+    border:1.5px solid #000;
+    transform:translateX(-50%);
+    z-index:1;
+  }
+  .penalty-box.top { top:0; border-top:none; }
+  .penalty-box.bottom { bottom:0; border-bottom:none; }
+
+  /* Vratarski prostor */
+  .goal-area {
+    position:absolute;
+    left:50%;
+    width:28mm; height:8mm;
+    border:1.5px solid #000;
+    transform:translateX(-50%);
+    z-index:2;
+  }
+  .goal-area.top { top:0; border-top:none; }
+  .goal-area.bottom { bottom:0; border-bottom:none; }
+
+  /* Mreža gola – ispod linije */
+  .goal-net {
+    position:absolute;
+    left:50%;
+    width:28mm; height:4mm;
+    border:1.5px solid #000;
+    transform:translateX(-50%);
+    background-color:#fff;
+    background-image:
+      repeating-linear-gradient(45deg, #000 0 0.4px, transparent 0.4px 2mm),
+      repeating-linear-gradient(-45deg, #000 0 0.4px, transparent 0.4px 2mm);
+    z-index:4;
+  }
+  .goal-net.top { top:-4mm; border-bottom:none; }
+  .goal-net.bottom { bottom:-4mm; border-top:none; }
+
+  /* Polukrug */
+  .penalty-arc {
+    position:absolute;
+    left:50%;
+    width:22mm; height:11mm;
+    border:1.5px solid #000;
+    transform:translateX(-50%);
+    z-index:1;
+  }
+  .penalty-arc.top {
+    top:20mm; border-top:none;
+    border-radius:0 0 50% 50% / 0 0 100% 100%;
+  }
+  .penalty-arc.bottom {
+    bottom:20mm; border-bottom:none;
+    border-radius:50% 50% 0 0 / 100% 100% 0 0;
+  }
+
+  /* Točka penala */
+  .penalty-dot {
+    position:absolute;
+    left:50%;
+    width:2mm; height:2mm;
+    background:#000; border-radius:50%;
+    transform:translateX(-50%);
+    z-index:2;
+  }
+  .penalty-dot.top { top:12mm; }
+  .penalty-dot.bottom { bottom:12mm; }
+
+  /* ===== IGRAČI – SILUETE DRESOVA ===== */
+  .player {
+    width:9mm; height:9mm;
+    cursor:grab;
+    user-select:none;
+    touch-action:none;
+    position:relative;
+    filter:drop-shadow(0 1px 1px rgba(0,0,0,.3));
+  }
+  .player svg {
+    width:100%; height:100%;
+    display:block;
+    pointer-events:none;
+  }
+  .player .num {
+    position:absolute;
+    left:50%; top:58%;
+    transform:translate(-50%,-50%);
+    font-size:7.5px;
+    font-weight:900;
+    color:#000;
+    font-family:Arial, sans-serif;
+    pointer-events:none;
+    line-height:1;
+  }
+  .player.placed { position:absolute; z-index:5; }
+  .player:active { cursor:grabbing; }
+  .player.dragging {
+    position:fixed !important;
+    z-index:9999;
+    transform:scale(1.25);
+    cursor:grabbing;
+    filter:drop-shadow(0 4px 6px rgba(0,0,0,.5));
+  }
+
+  /* ===== BAZEN IGRAČA ===== */
+  .players-pool {
+    display:flex;
+    flex-wrap:wrap;
+    gap:1.5mm;
+    margin-top:3mm;
+    padding:2.5mm 2mm;
+    border:1px dashed #888;
+    background:#fafafa;
+    justify-content:center;
+    align-content:center;
+    flex-shrink:0;
+    min-height:13mm;
+  }
+
+  /* ===== TAKTIKE ===== */
+  .tactics {
+    display:grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap:4mm;
+    font-size:11.5px;
+    line-height:1.32;
+    align-content:start;
+    overflow:hidden;
+  }
+  .col h3 {
+    font-size:12px;
+    font-weight:bold;
+    letter-spacing:.3px;
+    margin-bottom:3px;
+    text-transform:uppercase;
+    border-bottom:1.2px solid #000;
+    padding-bottom:1.5px;
+  }
+  .col .sub {
+    font-weight:bold;
+    letter-spacing:.1px;
+    margin-top:4px;
+    margin-bottom:1px;
+    font-size:11.5px;
+  }
+  .col .sub:first-of-type { margin-top:2px; }
+  .col ul { list-style:none; }
+  .col li {
+    display:flex;
+    align-items:flex-start;
+    gap:5px;
+    cursor:pointer;
+    padding:1px 2px;
+    border-radius:2px;
+    line-height:1.3;
+    transition:background .1s;
+  }
+  .col li:hover { background:#eee; }
+
+  /* Checkbox – jasniji */
+  .box {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:11px; height:11px;
+    border:1.5px solid #000;
+    flex-shrink:0;
+    margin-top:1.5px;
+    position:relative;
+    background:#fff;
+    box-sizing:border-box;
+  }
+  .box.checked {
+    background:#000;
+  }
+  .box.checked::before {
+    content:"✓";
+    position:absolute;
+    left:50%; top:50%;
+    transform:translate(-50%,-55%);
+    font-size:11px;
+    line-height:1;
+    color:#fff;
+    font-weight:900;
+  }
+
+  /* ===== CLUB ===== */
+  .club-line {
+    margin-top:2mm;
+    font-size:13px; font-weight:bold;
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    gap:5px;
+    padding-right:2px;
+  }
+  .club-line input {
+    border:none;
+    border-bottom:1.5px solid #000;
+    font-family:inherit;
+    font-size:13px; font-weight:bold;
+    outline:none;
+    background:transparent;
+    min-width:220px;
+    padding:1px 4px;
+  }
+
+  /* ===== PRINT ===== */
+  @media print {
+    @page { size: A4 landscape; margin: 0; }
+    html, body { background:#fff; padding:0; margin:0; }
+    .toolbar { display:none !important; }
+    .page {
+      box-shadow:none;
+      width:297mm; height:210mm;
+      padding:8mm 10mm 6mm 10mm;
+    }
+    .players-pool { display:none !important; }
+  }
+
+  /* ===== RESPONZIVNA SKALA ===== */
+  @media (max-width: 1200px) {
+    .page { transform: scale(0.85); transform-origin: top center; margin-bottom:-20mm; }
+  }
+  @media (max-width: 950px) {
+    .page { transform: scale(0.7); margin-bottom:-60mm; }
+  }
+  @media (max-width: 750px) {
+    .page { transform: scale(0.55); margin-bottom:-95mm; }
+  }
+  @media (max-width: 550px) {
+    .page { transform: scale(0.4); margin-bottom:-125mm; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <button id="pdfBtn">🖨️ SPREMI KAO PDF</button>
+  <button id="clearBtn">🧹 OČISTI SVE</button>
+</div>
+
+<div class="page" id="page">
+
+  <div class="top-row">
+    <span class="title">FORMATION:</span>
+    <input type="text" id="formationInput" placeholder="4-3-3" maxlength="12">
+  </div>
+
+  <div class="main">
+
+    <div class="pitch-area">
+      <div class="pitch-wrap" id="pitchWrap">
+        <div class="halfway"></div>
+        <div class="center-circle"></div>
+        <div class="center-dot"></div>
+
+        <div class="penalty-box top"></div>
+        <div class="goal-area top"></div>
+        <div class="goal-net top"></div>
+        <div class="penalty-arc top"></div>
+        <div class="penalty-dot top"></div>
+
+        <div class="penalty-box bottom"></div>
+        <div class="goal-area bottom"></div>
+        <div class="goal-net bottom"></div>
+        <div class="penalty-arc bottom"></div>
+        <div class="penalty-dot bottom"></div>
+      </div>
+
+      <div class="players-pool" id="playersPool"></div>
+    </div>
+
+    <div class="tactics">
+      <!-- KOLONA 1 -->
+      <div class="col">
+        <h3>MENTALITY</h3>
+        <ul data-group="mentality">
+          <li><span class="box"></span>Very defensive</li>
+          <li><span class="box"></span>Defensive</li>
+          <li><span class="box"></span>Cautious</li>
+          <li><span class="box"></span>Balanced</li>
+          <li><span class="box"></span>Positive</li>
+          <li><span class="box"></span>Attacking</li>
+          <li><span class="box"></span>Very attacking</li>
+        </ul>
+
+        <div class="sub">PASSING DIRECTNESS</div>
+        <ul data-group="passing">
+          <li><span class="box"></span>Much Shorter</li>
+          <li><span class="box"></span>Shorter</li>
+          <li><span class="box"></span>Balanced</li>
+          <li><span class="box"></span>More Direct</li>
+          <li><span class="box"></span>Much More Direct</li>
+        </ul>
+        <div class="sub">TEMPO</div>
+        <ul data-group="tempo">
+          <li><span class="box"></span>Lower</li>
+          <li><span class="box"></span>Standard</li>
+          <li><span class="box"></span>Higher</li>
+        </ul>
+        <div class="sub">TIME WASTING</div>
+        <ul data-group="wasting">
+          <li><span class="box"></span>Less Often</li>
+          <li><span class="box"></span>Standard</li>
+          <li><span class="box"></span>More often</li>
+        </ul>
+        <div class="sub">ATTACKING TRANSITION</div>
+        <ul data-group="att-trans">
+          <li><span class="box"></span>Counter-Attack</li>
+          <li><span class="box"></span>Standard</li>
+          <li><span class="box"></span>Patient Build-Up</li>
+        </ul>
+        <div class="sub">ATTACKING WIDTH</div>
+        <ul data-group="att-width">
+          <li><span class="box"></span>Much Narrower</li>
+          <li><span class="box"></span>Narrower</li>
+          <li><span class="box"></span>Standard</li>
+          <li><span class="box"></span>Wider</li>
+          <li><span class="box"></span>Much Wider</li>
+        </ul>
+      </div>
+
+      <!-- KOLONA 2 -->
+      <div class="col">
+        <h3>IN POSSESSION</h3>
+        <div class="sub">CREATIVE FREEDOM</div>
+        <ul data-group="creative">
+          <li><span class="box"></span>More Disciplined</li>
+          <li><span class="box"></span>Balanced</li>
+          <li><span class="box"></span>More Expressive</li>
+        </ul>
+        <div class="sub">PLAY FOR SET PIECES</div>
+        <ul data-group="setpieces">
+          <li><span class="box"></span>Keep Ball in Play</li>
+          <li><span class="box"></span>Standard</li>
+        </ul>
+        <div class="sub">BUILD-UP STRATEGY</div>
+        <ul data-group="buildup">
+          <li><span class="box"></span>Play Through Press</li>
+          <li><span class="box"></span>Mixed</li>
+          <li><span class="box"></span>Direct</li>
+        </ul>
+        <div class="sub">GOAL KICKS</div>
+        <ul data-group="goalkicks">
+          <li><span class="box"></span>Short</li>
+          <li><span class="box"></span>Mixed</li>
+          <li><span class="box"></span>Long</li>
+        </ul>
+        <div class="sub">GK DISTRIBUTION (speed)</div>
+        <ul data-group="gk-speed">
+          <li><span class="box"></span>Slower</li>
+          <li><span class="box"></span>Balanced</li>
+          <li><span class="box"></span>Faster</li>
+        </ul>
+        <div class="sub">GK DISTRIBUTION (target)</div>
+        <ul data-group="gk-target">
+          <li><span class="box"></span>Center-Backs</li>
+          <li><span class="box"></span>Full-Backs</li>
+          <li><span class="box"></span>Midfielders</li>
+          <li><span class="box"></span>Forwards</li>
+        </ul>
+        <div class="sub">PASS RECEPTION</div>
+        <ul data-group="reception">
+          <li><span class="box"></span>Balanced</li>
+          <li><span class="box"></span>Overlapped</li>
+        </ul>
+        <div class="sub">DRIBBLING</div>
+        <ul data-group="dribbling">
+          <li><span class="box"></span>Reduced</li>
+          <li><span class="box"></span>Balanced</li>
+          <li><span class="box"></span>Encouraged</li>
+        </ul>
+      </div>
+
+      <!-- KOLONA 3 -->
+      <div class="col">
+        <h3>ATTACKING</h3>
+        <div class="sub">SUPPORTING RUNS</div>
+        <ul data-group="runs">
+          <li><span class="box"></span>Both Flanks</li>
+          <li><span class="box"></span>One Flank</li>
+          <li><span class="box"></span>Balanced</li>
+        </ul>
+        <div class="sub">PROGRESS THROUGH</div>
+        <ul data-group="progress">
+          <li><span class="box"></span>Left</li>
+          <li><span class="box"></span>Balanced</li>
+          <li><span class="box"></span>Right</li>
+        </ul>
+        <div class="sub">PATIENCE</div>
+        <ul data-group="patience">
+          <li><span class="box"></span>Work Ball Into Box</li>
+          <li><span class="box"></span>Balanced</li>
+          <li><span class="box"></span>Less Often</li>
+        </ul>
+        <div class="sub">SHOTS FROM DISTANCE</div>
+        <ul data-group="shots">
+          <li><span class="box"></span>Reduced</li>
+          <li><span class="box"></span>Balanced</li>
+          <li><span class="box"></span>Encouraged</li>
+        </ul>
+        <div class="sub">CROSSING STYLE</div>
+        <ul data-group="crossing">
+          <li><span class="box"></span>Low Crosses</li>
+          <li><span class="box"></span>Balanced</li>
+          <li><span class="box"></span>High Crosses</li>
+        </ul>
+        <div class="sub">LINE OF ENGAGEMENT</div>
+        <ul data-group="engagement">
+          <li><span class="box"></span>High Press</li>
+          <li><span class="box"></span>Mid Block</li>
+          <li><span class="box"></span>Low Block</li>
+        </ul>
+        <div class="sub">DEFENSIVE LINE</div>
+        <ul data-group="def-line">
+          <li><span class="box"></span>Deeper</li>
+          <li><span class="box"></span>Standard</li>
+          <li><span class="box"></span>Higher</li>
+          <li><span class="box"></span>Much Higher</li>
+        </ul>
+      </div>
+
+      <!-- KOLONA 4 -->
+      <div class="col">
+        <h3>OUT OF POSSESSION</h3>
+        <div class="sub">DEFENSIVE LINE BEHAVIOUR</div>
+        <ul data-group="def-behaviour">
+          <li><span class="box"></span>Balanced</li>
+          <li><span class="box"></span>Offside Trap</li>
+          <li><span class="box"></span>Step Up</li>
+        </ul>
+        <div class="sub">TRIGGER PRESS</div>
+        <ul data-group="trigger">
+          <li><span class="box"></span>Less Often</li>
+          <li><span class="box"></span>Balanced</li>
+          <li><span class="box"></span>More Often</li>
+        </ul>
+        <div class="sub">DEFENSIVE TRANSITION</div>
+        <ul data-group="def-trans">
+          <li><span class="box"></span>Counter-Press</li>
+          <li><span class="box"></span>Standard</li>
+          <li><span class="box"></span>Regroup</li>
+        </ul>
+        <div class="sub">TACKLING</div>
+        <ul data-group="tackling">
+          <li><span class="box"></span>Ease Off</li>
+          <li><span class="box"></span>Standard</li>
+          <li><span class="box"></span>Aggressive</li>
+        </ul>
+        <div class="sub">PRESSING TRAP</div>
+        <ul data-group="trap">
+          <li><span class="box"></span>Balanced</li>
+          <li><span class="box"></span>Active</li>
+        </ul>
+        <div class="sub">SHORT GK DISTRIBUTION</div>
+        <ul data-group="short-gk">
+          <li><span class="box"></span>Yes</li>
+          <li><span class="box"></span>No</li>
+        </ul>
+        <div class="sub">CROSS ENGAGEMENT</div>
+        <ul data-group="cross-eng">
+          <li><span class="box"></span>Hold Position</li>
+          <li><span class="box"></span>Balanced</li>
+          <li><span class="box"></span>Contest</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="club-line">
+    <span>CLUB:</span>
+    <input type="text" id="clubInput" maxlength="40">
+  </div>
+</div>
+
+<script>
+(function(){
+  const pitchWrap = document.getElementById('pitchWrap');
+  const playersPool = document.getElementById('playersPool');
+
+  /* ===== SILUETA DRESA (SVG) ===== */
+  const jerseySVG = `
+    <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+      <!-- Dres silueta -->
+      <path d="M 13 4
+               L 8 6
+               L 3 12
+               L 7 16
+               L 10 13
+               L 10 36
+               L 30 36
+               L 30 13
+               L 33 16
+               L 37 12
+               L 32 6
+               L 27 4
+               L 24 7
+               L 20 9
+               L 16 7
+               Z"
+            fill="#fff"
+            stroke="#000"
+            stroke-width="1.4"
+            stroke-linejoin="round"/>
+    </svg>
+  `;
+
+  /* ===== STVORI 11 IGRAČA ===== */
+  function createPlayers(){
+    playersPool.innerHTML = '';
+    for(let i = 1; i <= 11; i++){
+      const p = document.createElement('div');
+      p.className = 'player';
+      p.dataset.id = i;
+      p.innerHTML = jerseySVG + `<span class="num">${i}</span>`;
+      playersPool.appendChild(p);
+    }
+  }
+
+  /* ===== DRAG & DROP ===== */
+  let dragEl = null;
+  let dragOffX = 0, dragOffY = 0;
+
+  function getPoint(e){
+    if(e.touches && e.touches.length){
+      return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+    return { x: e.clientX, y: e.clientY };
+  }
+
+  function onPointerDown(e){
+    const el = e.target.closest('.player');
+    if(!el) return;
+    e.preventDefault();
+
+    dragEl = el;
+    const pt = getPoint(e);
+    const rect = el.getBoundingClientRect();
+    dragOffX = pt.x - rect.left;
+    dragOffY = pt.y - rect.top;
+
+    el.classList.add('dragging');
+    document.body.appendChild(el);
+    el.style.position = 'fixed';
+    el.style.left = (pt.x - dragOffX) + 'px';
+    el.style.top  = (pt.y - dragOffY) + 'px';
+    el.style.width  = '9mm';
+    el.style.height = '9mm';
+
+    document.addEventListener('mousemove', onPointerMove);
+    document.addEventListener('mouseup', onPointerUp);
+    document.addEventListener('touchmove', onPointerMove, { passive:false });
+    document.addEventListener('touchend', onPointerUp);
+  }
+
+  function onPointerMove(e){
+    if(!dragEl) return;
+    e.preventDefault();
+    const pt = getPoint(e);
+    dragEl.style.left = (pt.x - dragOffX) + 'px';
+    dragEl.style.top  = (pt.y - dragOffY) + 'px';
+  }
+
+  function onPointerUp(e){
+    if(!dragEl) return;
+    const el = dragEl;
+    const pt = e.changedTouches ? e.changedTouches[0] : e;
+    const x = pt.clientX;
+    const y = pt.clientY;
+
+    el.classList.remove('dragging');
+    el.style.position = '';
+    el.style.left = '';
+    el.style.top  = '';
+    el.style.width  = '';
+    el.style.height = '';
+
+    const pitchRect = pitchWrap.getBoundingClientRect();
+    if(x >= pitchRect.left && x <= pitchRect.right &&
+       y >= pitchRect.top  && y <= pitchRect.bottom){
+      const relX = x - pitchRect.left - dragOffX;
+      const relY = y - pitchRect.top  - dragOffY;
+      el.classList.add('placed');
+      el.style.left = relX + 'px';
+      el.style.top  = relY + 'px';
+      pitchWrap.appendChild(el);
+    } else {
+      el.classList.remove('placed');
+      el.style.left = '';
+      el.style.top  = '';
+      playersPool.appendChild(el);
+    }
+
+    dragEl = null;
+    document.removeEventListener('mousemove', onPointerMove);
+    document.removeEventListener('mouseup', onPointerUp);
+    document.removeEventListener('touchmove', onPointerMove);
+    document.removeEventListener('touchend', onPointerUp);
+  }
+
+  document.addEventListener('mousedown', (e) => {
+    if(e.target.closest('.player')) onPointerDown(e);
+  });
+  document.addEventListener('touchstart', (e) => {
+    if(e.target.closest('.player')) onPointerDown(e);
+  }, { passive:false });
+
+  /* ===== CHECKBOX ===== */
+  document.querySelectorAll('.col li').forEach(li => {
+    li.addEventListener('click', (e) => {
+      e.preventDefault();
+      const box = li.querySelector('.box');
+      if(box) box.classList.toggle('checked');
+    });
+  });
+
+  /* ===== PDF ===== */
+  document.getElementById('pdfBtn').addEventListener('click', () => {
+    const element = document.getElementById('page');
+    const clubName = (document.getElementById('clubInput').value || 'taktika')
+                       .replace(/[^\w\-]+/g,'_');
+
+    const pool = document.getElementById('playersPool');
+    const prevDisplay = pool.style.display;
+    pool.style.display = 'none';
+
+    const prevTransform = element.style.transform;
+    element.style.transform = 'none';
+
+    const opt = {
+      margin: 0,
+      filename: `fm_taktika_${clubName}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+    };
+
+    html2pdf().set(opt).from(element).save().then(() => {
+      pool.style.display = prevDisplay;
+      element.style.transform = prevTransform;
+    }).catch(() => {
+      pool.style.display = prevDisplay;
+      element.style.transform = prevTransform;
+    });
+  });
+
+  /* ===== OČISTI SVE ===== */
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    if(!confirm('Očistiti sve oznake, igrače i upisane podatke?')) return;
+
+    // Reset checkboxa
+    document.querySelectorAll('.box').forEach(b => b.classList.remove('checked'));
+
+    // Reset inputa
+    document.getElementById('formationInput').value = '';
+    document.getElementById('clubInput').value = '';
+
+    // Vrati igrače u bazen
+    pitchWrap.querySelectorAll('.player').forEach(el => {
+      el.classList.remove('placed');
+      el.style.left = '';
+      el.style.top  = '';
+      playersPool.appendChild(el);
+    });
+  });
+
+  /* ===== INIT ===== */
+  createPlayers();
+})();
+</script>
+</body>
+</html>
