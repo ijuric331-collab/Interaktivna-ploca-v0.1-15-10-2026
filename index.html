@@ -17,7 +17,6 @@
     min-height:100vh;
   }
 
-  /* ===== TOOLBAR ===== */
   .toolbar {
     display:flex; gap:8px; justify-content:center; flex-wrap:wrap;
     margin-bottom:16px;
@@ -32,7 +31,6 @@
   .toolbar button:hover { background:#222; color:#fff; }
   .toolbar button:active { transform:translateY(1px); }
 
-  /* ===== A4 LANDSCAPE ===== */
   .page {
     width:297mm;
     height:210mm;
@@ -45,7 +43,6 @@
     overflow:hidden;
   }
 
-  /* ===== TOP ROW ===== */
   .top-row {
     display:flex; align-items:center; gap:14px;
     margin-bottom:3mm;
@@ -59,7 +56,6 @@
     width:130px; padding:1px 4px; text-align:center;
   }
 
-  /* ===== MAIN GRID ===== */
   .main {
     display:grid;
     grid-template-columns: 108mm 1fr;
@@ -68,7 +64,6 @@
     min-height:0;
   }
 
-  /* ===== TEREN ===== */
   .pitch-area {
     display:flex;
     flex-direction:column;
@@ -85,14 +80,12 @@
     overflow:hidden;
   }
 
-  /* Srednja linija */
   .halfway {
     position:absolute;
     left:0; right:0; top:50%;
     height:1.5px; background:#000;
     transform:translateY(-0.75px);
   }
-  /* Središnji krug */
   .center-circle {
     position:absolute;
     left:50%; top:50%;
@@ -110,7 +103,6 @@
     z-index:3;
   }
 
-  /* Kazneni prostor */
   .penalty-box {
     position:absolute;
     left:50%;
@@ -122,7 +114,6 @@
   .penalty-box.top { top:0; border-top:none; }
   .penalty-box.bottom { bottom:0; border-bottom:none; }
 
-  /* Vratarski prostor */
   .goal-area {
     position:absolute;
     left:50%;
@@ -134,7 +125,6 @@
   .goal-area.top { top:0; border-top:none; }
   .goal-area.bottom { bottom:0; border-bottom:none; }
 
-  /* Mreža gola – ispod linije */
   .goal-net {
     position:absolute;
     left:50%;
@@ -150,7 +140,6 @@
   .goal-net.top { top:-4mm; border-bottom:none; }
   .goal-net.bottom { bottom:-4mm; border-top:none; }
 
-  /* Polukrug */
   .penalty-arc {
     position:absolute;
     left:50%;
@@ -168,7 +157,6 @@
     border-radius:50% 50% 0 0 / 100% 100% 0 0;
   }
 
-  /* Točka penala */
   .penalty-dot {
     position:absolute;
     left:50%;
@@ -180,20 +168,24 @@
   .penalty-dot.top { top:12mm; }
   .penalty-dot.bottom { bottom:12mm; }
 
-  /* ===== IGRAČI – SILUETE DRESOVA ===== */
+  /* ===== IGRAČI – DRES KAO BASE64 SLIKA ===== */
   .player {
-    width:9mm; height:9mm;
+    width:9mm;
+    height:9mm;
     cursor:grab;
     user-select:none;
     touch-action:none;
     position:relative;
-    filter:drop-shadow(0 1px 1px rgba(0,0,0,.3));
   }
-  .player svg {
-    width:100%; height:100%;
-    display:block;
-    pointer-events:none;
+  
+  .player img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    pointer-events: none;
+    -webkit-user-drag: none;
   }
+
   .player .num {
     position:absolute;
     left:50%; top:58%;
@@ -204,7 +196,9 @@
     font-family:Arial, sans-serif;
     pointer-events:none;
     line-height:1;
+    z-index: 2;
   }
+
   .player.placed { position:absolute; z-index:5; }
   .player:active { cursor:grabbing; }
   .player.dragging {
@@ -212,10 +206,8 @@
     z-index:9999;
     transform:scale(1.25);
     cursor:grabbing;
-    filter:drop-shadow(0 4px 6px rgba(0,0,0,.5));
   }
 
-  /* ===== BAZEN IGRAČA ===== */
   .players-pool {
     display:flex;
     flex-wrap:wrap;
@@ -230,7 +222,6 @@
     min-height:13mm;
   }
 
-  /* ===== TAKTIKE ===== */
   .tactics {
     display:grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
@@ -270,7 +261,6 @@
   }
   .col li:hover { background:#eee; }
 
-  /* Checkbox – jasniji */
   .box {
     display:inline-flex;
     align-items:center;
@@ -297,7 +287,6 @@
     font-weight:900;
   }
 
-  /* ===== CLUB ===== */
   .club-line {
     margin-top:2mm;
     font-size:13px; font-weight:bold;
@@ -318,7 +307,6 @@
     padding:1px 4px;
   }
 
-  /* ===== PRINT ===== */
   @media print {
     @page { size: A4 landscape; margin: 0; }
     html, body { background:#fff; padding:0; margin:0; }
@@ -331,7 +319,6 @@
     .players-pool { display:none !important; }
   }
 
-  /* ===== RESPONZIVNA SKALA ===== */
   @media (max-width: 1200px) {
     .page { transform: scale(0.85); transform-origin: top center; margin-bottom:-20mm; }
   }
@@ -385,7 +372,6 @@
     </div>
 
     <div class="tactics">
-      <!-- KOLONA 1 -->
       <div class="col">
         <h3>MENTALITY</h3>
         <ul data-group="mentality">
@@ -434,7 +420,6 @@
         </ul>
       </div>
 
-      <!-- KOLONA 2 -->
       <div class="col">
         <h3>IN POSSESSION</h3>
         <div class="sub">CREATIVE FREEDOM</div>
@@ -486,7 +471,6 @@
         </ul>
       </div>
 
-      <!-- KOLONA 3 -->
       <div class="col">
         <h3>ATTACKING</h3>
         <div class="sub">SUPPORTING RUNS</div>
@@ -534,7 +518,6 @@
         </ul>
       </div>
 
-      <!-- KOLONA 4 -->
       <div class="col">
         <h3>OUT OF POSSESSION</h3>
         <div class="sub">DEFENSIVE LINE BEHAVIOUR</div>
@@ -592,10 +575,12 @@
   const pitchWrap = document.getElementById('pitchWrap');
   const playersPool = document.getElementById('playersPool');
 
-  /* ===== SILUETA DRESA (SVG) ===== */
-  const jerseySVG = `
-    <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-      <!-- Dres silueta -->
+  /* ============================================================
+     SVG DRES → pretvoren u BASE64 SLIKU (data URL)
+     Ovo je jedini način da html2canvas 100% prikaže dres u PDF-u.
+     ============================================================ */
+  const svgString = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
       <path d="M 13 4
                L 8 6
                L 3 12
@@ -612,12 +597,15 @@
                L 20 9
                L 16 7
                Z"
-            fill="#fff"
-            stroke="#000"
-            stroke-width="1.4"
+            fill="#ffffff"
+            stroke="#000000"
+            stroke-width="1.6"
             stroke-linejoin="round"/>
     </svg>
   `;
+
+  // Pretvori SVG string u Base64 data URL
+  const jerseyDataURL = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
 
   /* ===== STVORI 11 IGRAČA ===== */
   function createPlayers(){
@@ -626,7 +614,7 @@
       const p = document.createElement('div');
       p.className = 'player';
       p.dataset.id = i;
-      p.innerHTML = jerseySVG + `<span class="num">${i}</span>`;
+      p.innerHTML = `<img src="${jerseyDataURL}" alt="dres"><span class="num">${i}</span>`;
       playersPool.appendChild(p);
     }
   }
@@ -728,7 +716,9 @@
     });
   });
 
-  /* ===== PDF ===== */
+  /* ============================================================
+     PDF – čekamo da se slike učitaju prije generiranja
+     ============================================================ */
   document.getElementById('pdfBtn').addEventListener('click', () => {
     const element = document.getElementById('page');
     const clubName = (document.getElementById('clubInput').value || 'taktika')
@@ -741,20 +731,35 @@
     const prevTransform = element.style.transform;
     element.style.transform = 'none';
 
-    const opt = {
-      margin: 0,
-      filename: `fm_taktika_${clubName}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
-    };
+    // Pričekaj da se sve slike (dresovi) učitaju
+    const imgs = element.querySelectorAll('img');
+    const promises = Array.from(imgs).map(img => {
+      if(img.complete) return Promise.resolve();
+      return new Promise(res => { img.onload = img.onerror = res; });
+    });
 
-    html2pdf().set(opt).from(element).save().then(() => {
-      pool.style.display = prevDisplay;
-      element.style.transform = prevTransform;
-    }).catch(() => {
-      pool.style.display = prevDisplay;
-      element.style.transform = prevTransform;
+    Promise.all(promises).then(() => {
+      const opt = {
+        margin: 0,
+        filename: `fm_taktika_${clubName}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+          scale: 3,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false,
+          allowTaint: true
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+      };
+
+      html2pdf().set(opt).from(element).save().then(() => {
+        pool.style.display = prevDisplay;
+        element.style.transform = prevTransform;
+      }).catch(() => {
+        pool.style.display = prevDisplay;
+        element.style.transform = prevTransform;
+      });
     });
   });
 
@@ -762,14 +767,10 @@
   document.getElementById('clearBtn').addEventListener('click', () => {
     if(!confirm('Očistiti sve oznake, igrače i upisane podatke?')) return;
 
-    // Reset checkboxa
     document.querySelectorAll('.box').forEach(b => b.classList.remove('checked'));
-
-    // Reset inputa
     document.getElementById('formationInput').value = '';
     document.getElementById('clubInput').value = '';
 
-    // Vrati igrače u bazen
     pitchWrap.querySelectorAll('.player').forEach(el => {
       el.classList.remove('placed');
       el.style.left = '';
